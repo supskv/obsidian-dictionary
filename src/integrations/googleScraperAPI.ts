@@ -23,7 +23,7 @@ class Base {
 export class GoogleScraperDefinitionProvider extends Base implements DefinitionProvider {
     async requestDefinitions(query: string, lang: string): Promise<DictionaryWord> {
         const result = await requestUrl({
-            url: `https://www.google.com/search?q=define+${query.replace(/\s/g, '+')}+${GoogleScraperDefinitionProvider.LANGUAGES[lang]}`,
+            url: `https://www.google.com/search?q=${query.replace(/\s/g, '+')}+defination+${GoogleScraperDefinitionProvider.LANGUAGES[lang]}`,
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36' }
         });
         console.log(result);
@@ -38,6 +38,7 @@ export class GoogleScraperDefinitionProvider extends Base implements DefinitionP
             meanings: [],
             word: data.querySelector('span[data-dobid="hdw"]')?.textContent ?? query
         };
+        def.word = def.word.replaceAll('·', '');
 
         //Something like eɪpr(ɪ)l (April)
         const phoneticText = data.querySelector('.LTKOO > span')?.textContent;
