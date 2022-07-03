@@ -29,7 +29,7 @@ export class GoogleScraperDefinitionProvider extends Base implements DefinitionP
         console.log(result);
 
         const doc = new DOMParser().parseFromString(result.text, 'text/html');
-        const data = doc.querySelector(`div[data-query-term=${query}]`);
+        const data = doc.querySelector(`div[data-query-term="${query}"]`);
 
         if (!data) throw "";
 
@@ -50,33 +50,36 @@ export class GoogleScraperDefinitionProvider extends Base implements DefinitionP
         }
 
         //Something like noun
-        const type = data.querySelector('.vmod i')?.textContent;
-        if (type) {
-            const defGenerator = (defs: NodeList) => {
-
-                const out: Definition[] = [];
-                const syns: string[] = [];
-                const tmp = data.querySelectorAll('.lr_container div[role="button"] span');
-                tmp.forEach((el) => {
-                    if (!el.parentElement?.getAttribute('data-topic') && el.textContent) {
-                        syns.push(el.textContent.trim());
-                    }
-                })
-                defs.forEach((el, idx) => {
-                    out.push({
-                        definition: el.textContent,
-                        example: el.nextSibling?.textContent,
-                        synonyms: !idx ? syns : undefined
+        // const type = data.querySelector('.vmod i')?.textContent;
+        const types = data.querySelectorAll('.vmod i');
+        types.forEach(type => {
+            if (type) {
+                const defGenerator = (defs: NodeList) => {
+    
+                    const out: Definition[] = [];
+                    const syns: string[] = [];
+                    const tmp = data.querySelectorAll('.lr_container div[role="button"] span');
+                    tmp.forEach((el) => {
+                        if (!el.parentElement?.getAttribute('data-topic') && el.textContent) {
+                            syns.push(el.textContent.trim());
+                        }
                     })
-                })
-                return out;
+                    defs.forEach((el, idx) => {
+                        out.push({
+                            definition: el.textContent,
+                            example: el.nextSibling?.textContent,
+                            synonyms: !idx ? syns : undefined
+                        })
+                    })
+                    return out;
+                }
+    
+                def.meanings.push({
+                    partOfSpeech: type?.textContent,
+                    definitions: defGenerator(type.closest('.vmod').querySelectorAll('div[data-dobid="dfn"]'))
+                });
             }
-
-            def.meanings.push({
-                partOfSpeech: type,
-                definitions: defGenerator(data.querySelectorAll('div[data-dobid="dfn"]'))
-            });
-        }
+        })
 
         return def;
     }
